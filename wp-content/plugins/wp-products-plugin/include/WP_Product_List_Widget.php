@@ -116,8 +116,12 @@ function display_post($loop){
       <div class="wp-product-rating">
          <?php  
          echo("<h4>");
-         for($i=0;$i<$current_product_stars;$i++){
-             echo "*";
+         for($i=0;$i<5;$i++){
+             if($i<$current_product_stars){
+                 echo "<i class='fas fa-star'></i>";
+             }else{
+                 echo "<i class='far fa-star'></i>";
+             }
          }
          echo("</h4>");
          ?>
