@@ -1,7 +1,14 @@
 <?php
+/**
+ * This is the section responsible to create a new Post Type called, a taxonomy called Target Groups and a metabox "Stars" that
+ * will be a filed of the new Post type
+ */
 
 add_action( 'init', 'wp_product_plugin_create_product' );
 
+/**
+ * register a new custom post type called "Product" with a taxonomy called Target Groups
+ */
 function wp_product_plugin_create_product() {
     register_post_type(
         'product',
@@ -44,6 +51,9 @@ function wp_product_plugin_create_product() {
         register_taxonomy_for_object_type('target_groups', 'product');
 }
 
+/**
+ * add a new metabox for the custom post type "Product" 
+ */
 function wp_product_plugin_add_box()
 {
     add_meta_box(
@@ -57,6 +67,10 @@ function wp_product_plugin_add_box()
 }
 add_action('add_meta_boxes', 'wp_product_plugin_add_box');
 
+
+/**
+ * the metabox will be a select with 5 integer values, those integer values represents the rating of the products
+ */
 function wp_product_plugin_box_html($post)
 {
     /* Check if there is any meta value stored in the database in order to set the selected option using the function selected() */
@@ -76,6 +90,9 @@ function wp_product_plugin_box_html($post)
     <?php
 }
 
+/**
+ * this function store the values choosed by the user with the select to the database
+ */
 function wp_product_plugin_save_postdata($post_id)
 {
     if (array_key_exists('wp_product_plugin_field', $_POST)) {

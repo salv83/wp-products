@@ -1,5 +1,17 @@
-<?php
+<?php 
+/**
+* WP_Product_List_Widget
+*/
+
+/**
+ * This class implements the widget that displays the products
+ */
+
 class WP_Product_List_Widget extends WP_Widget {
+    
+    /**
+     * This is the standard constructor for the wordpress widgets
+     */
     public function __construct() {
         $widget_options = array(
             'classname' => 'wp_product_list_widget',
@@ -8,6 +20,10 @@ class WP_Product_List_Widget extends WP_Widget {
         parent::__construct( 'wp_product_list_widget', 'WP Product List', $widget_options );
     }
     
+    /**
+     * The function form() specify the input fields of the widget, in this case there will be only one text field
+     * where the user will inster the Title that should be displayed above the widget
+     */
     public function form( $instance ) {
         $title = ! empty( $instance['title'] ) ? $instance['title'] : ''; ?>
       <p>
@@ -16,6 +32,16 @@ class WP_Product_List_Widget extends WP_Widget {
       </p><?php 
     }
     
+    
+    /**
+     * The function widget() implements the main logic of our widget. 
+     * - The basic behaviour is to list the first 5 items of the post type "Product" sorted by the number of stars descending.
+     * - When the page is called with a target group parameter the widget only show product items which are connected to the given target group.
+     *   If this target parameter is not passed or does not exist it will display the products belonging to default target group specified in the setting page
+     * - When a target group is given in the url parameters and the given target group exists, the widget will store the value of this target group in a session
+     *   in this case, if there is any target group stored in the session when the target parameter is not passed or does not exist, the widget will
+     *   display not the default target group but the last valid target group stored in the session.
+     */
     public function widget( $args, $instance ) {
       $title = apply_filters( 'widget_title', $instance[ 'title' ] );
       echo $args['before_widget'] . $args['before_title'] . $title . $args['after_title']; ?>
@@ -101,6 +127,10 @@ class WP_Product_List_Widget extends WP_Widget {
 
 }
 
+/**
+ * For each case specificed in the if-else blocks of the function widget() will create a different loop that will be 
+ * passed to the function display_post() that will start the loop over our post types and will display the related information (Title - Stars - Picture)
+ */
 function display_post($loop){
     while ( $loop->have_posts() ) : $loop->the_post();
     $current_post_id = get_the_ID();
@@ -134,11 +164,17 @@ function display_post($loop){
       <?php endwhile; 
 }
 
+/**
+ * This is a standard call to the register_widget() function that will register our widget in the wordpress backend
+ */
 function register_wp_product_list_widget() {
     register_widget( 'WP_Product_List_Widget' );
 }
 add_action( 'widgets_init', 'register_wp_product_list_widget' );
 
+/**
+ * Start new or resume existing session
+ */
 function register_session(){
     if( !session_id() )
         session_start();
