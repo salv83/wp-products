@@ -27,6 +27,12 @@ class WP_Product_List_Widget extends WP_Widget {
       $current_default_term_slug = $current_default_term->slug;             
       if(isset($default_target_group)&&!empty($default_target_group)&&term_exists( $current_default_term_slug, 'target_groups' )){
           if(isset($requested_target_group)&&!empty($requested_target_group)&&term_exists( $requested_target_group, 'target_groups' )){
+              
+             /*
+              * In this case a target group is given in the url parameters and the given target group exists, we store
+              * in a session the giver target group that will be reused when no target group is given or it doesn’t exist 
+             */
+              $_SESSION['target'] = $requested_target_group;
               /*
                * When the page is called with a target group parameter the widget only show product items which are connected to the given target group.
               */
@@ -46,16 +52,24 @@ class WP_Product_List_Widget extends WP_Widget {
                   )
               );
           }else{
-              /* 
-               * If no target parameter was passed or the target passed does not exist fall back to the default target group
-              */
+              /*
+               * In this case no target parameter was passed or the target passed does not exist, first we check if there
+               * is any target group in the session, if it exists we used the stored one in the session, if not we use
+               * the default target group
+               */
+              $targetGroupDefaultOrStored = "";
+              if(isset($_SESSION['target'])&&!empty($_SESSION['target'])){
+                  $targetGroupDefaultOrStored = $_SESSION['target'];
+              }else{
+                  $targetGroupDefaultOrStored = $current_default_term_slug;
+              }
               $loop = new WP_Query( array(
                   'post_type' => 'Product',
                   'tax_query' => array(
                       array (
                           'taxonomy' => 'target_groups',
                           'field' => 'slug',
-                          'terms' => $current_default_term_slug,
+                          'terms' => $targetGroupDefaultOrStored,
                       )
                   ),
                   'posts_per_page' => 5,                         
@@ -120,3 +134,9 @@ function register_wp_product_list_widget() {
     register_widget( 'WP_Product_List_Widget' );
 }
 add_action( 'widgets_init', 'register_wp_product_list_widget' );
+
+function register_session(){
+    if( !session_id() )
+        session_start();
+}
+add_action('init','register_session');
