@@ -21,21 +21,80 @@ class WP_Product_List_Widget extends WP_Widget {
       echo $args['before_widget'] . $args['before_title'] . $title . $args['after_title']; ?>
 
       <?php 
-      $loop = new WP_Query( array(
+      $requested_target_group = $_GET['target'];
+      $default_target_group = get_option('default-target-group') ;
+      $current_default_term = get_term( $default_target_group, 'target_groups' );
+      $current_default_term_slug = $current_default_term->slug;             
+      if(isset($default_target_group)&&!empty($default_target_group)&&term_exists( $current_default_term_slug, 'target_groups' )){
+          if(isset($requested_target_group)&&!empty($requested_target_group)&&term_exists( $requested_target_group, 'target_groups' )){
+              /*
+               * When the page is called with a target group parameter the widget only show product items which are connected to the given target group.
+              */
+              $loop = new WP_Query( array(
+                  'post_type' => 'Product',
+                  'tax_query' => array(
+                      array (
+                          'taxonomy' => 'target_groups',
+                          'field' => 'slug',
+                          'terms' => $requested_target_group,
+                      )
+                  ),
+                  'posts_per_page' => 5,                         
+                  'order' , 'DESC',                             
+                  'orderby' => 'meta_value',                     
+                  'meta_key' => '_wp_product_plugin_meta_key'
+                  )
+              );
+          }else{
+              /* 
+               * If no target parameter was passed or the target passed does not exist fall back to the default target group
+              */
+              $loop = new WP_Query( array(
+                  'post_type' => 'Product',
+                  'tax_query' => array(
+                      array (
+                          'taxonomy' => 'target_groups',
+                          'field' => 'slug',
+                          'terms' => $current_default_term_slug,
+                      )
+                  ),
+                  'posts_per_page' => 5,                         
+                  'order' , 'DESC',                              
+                  'orderby' => 'meta_value',                   
+                  'meta_key' => '_wp_product_plugin_meta_key'
+              )
+            );
+          }
+      }else{
+          /*
+           * When the plugin is activated and noone has selected a default target group in the setting page, the
+           * default behaviour of the widget is to display the first five product items with the highest rating 
+           */
+          $loop = new WP_Query( array(
               'post_type' => 'Product',
               'posts_per_page' => 5,                         //  display only the first 5 posts
               'order' , 'DESC',                              //  set the descending order
               'orderby' => 'meta_value',                     //  the order is specified using the meta_value containing the number of stars
               'meta_key' => '_wp_product_plugin_meta_key'
-          )
-      );
-      while ( $loop->have_posts() ) : $loop->the_post();
-      $current_post_id = get_the_ID();
-      $current_post_meta = get_post_meta($current_post_id);
-      $current_product_stars = $current_post_meta['_wp_product_plugin_meta_key'][0];
+            )
+          );
+      }
+      display_post($loop);
+      wp_reset_query();   
+      echo $args['after_widget'];
+    }
+    
 
+}
 
-      if ( has_post_thumbnail() ) { ?>
+function display_post($loop){
+    while ( $loop->have_posts() ) : $loop->the_post();
+    $current_post_id = get_the_ID();
+    $current_post_meta = get_post_meta($current_post_id);
+    $current_product_stars = $current_post_meta['_wp_product_plugin_meta_key'][0];
+    
+    
+    if ( has_post_thumbnail() ) { ?>
       <div class="wp-product-thumbnail">
          <a href="<?php the_permalink(); ?>"><?php the_post_thumbnail(); ?></a>
       </div>
@@ -54,12 +113,7 @@ class WP_Product_List_Widget extends WP_Widget {
         <p><?php echo get_the_title(); ?></p>
       </div>
       <hr>
-      <?php endwhile; wp_reset_query();
-        
-      echo $args['after_widget'];
-    }
-    
-
+      <?php endwhile; 
 }
 
 function register_wp_product_list_widget() {
