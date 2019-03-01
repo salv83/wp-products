@@ -1,0 +1,68 @@
+<?php
+class WP_Product_List_Widget extends WP_Widget {
+    public function __construct() {
+        $widget_options = array(
+            'classname' => 'wp_product_list_widget',
+            'description' => 'The widget lists the first 5 items of the "Product" post type sorted by the number of stars descending.',
+        );
+        parent::__construct( 'wp_product_list_widget', 'WP Product List', $widget_options );
+    }
+    
+    public function form( $instance ) {
+        $title = ! empty( $instance['title'] ) ? $instance['title'] : ''; ?>
+      <p>
+        <label for="<?php echo $this->get_field_id( 'title' ); ?>">Title:</label>
+        <input type="text" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo esc_attr( $title ); ?>" />
+      </p><?php 
+    }
+    
+    public function widget( $args, $instance ) {
+      $title = apply_filters( 'widget_title', $instance[ 'title' ] );
+      echo $args['before_widget'] . $args['before_title'] . $title . $args['after_title']; ?>
+
+      <?php 
+      $loop = new WP_Query( array(
+              'post_type' => 'Product',
+              'posts_per_page' => 5,                         //  display only the first 5 posts
+              'order' , 'DESC',                              //  set the descending order
+              'orderby' => 'meta_value',                     //  the order is specified using the meta_value containing the number of stars
+              'meta_key' => '_wp_product_plugin_meta_key'
+          )
+      );
+      while ( $loop->have_posts() ) : $loop->the_post();
+      $current_post_id = get_the_ID();
+      $current_post_meta = get_post_meta($current_post_id);
+      $current_product_stars = $current_post_meta['_wp_product_plugin_meta_key'][0];
+
+
+      if ( has_post_thumbnail() ) { ?>
+      <div class="wp-product-thumbnail">
+         <a href="<?php the_permalink(); ?>"><?php the_post_thumbnail(); ?></a>
+      </div>
+      <?php } ?>
+      <div class="wp-product-rating">
+         <?php  
+         echo("<h4>");
+         for($i=0;$i<$current_product_stars;$i++){
+             echo "*";
+         }
+         echo("</h4>");
+         ?>
+      </div>
+      
+      <div class="wp-product-title">
+        <p><?php echo get_the_title(); ?></p>
+      </div>
+      <hr>
+      <?php endwhile; wp_reset_query();
+        
+      echo $args['after_widget'];
+    }
+    
+
+}
+
+function register_wp_product_list_widget() {
+    register_widget( 'WP_Product_List_Widget' );
+}
+add_action( 'widgets_init', 'register_wp_product_list_widget' );

@@ -7,3 +7,4 @@
  */
 
 include_once( dirname( __FILE__ ) . '/include/posttypes.php' );
+include_once( dirname( __FILE__ ) . '/include/WP_Product_List_Widget.php' );
