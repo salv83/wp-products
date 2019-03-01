@@ -32,6 +32,16 @@ function wp_product_plugin_create_product() {
             'supports'           => array( 'title', 'thumbnail' )
         )
         );
+    
+        // create target groups
+        register_taxonomy(
+            'target_groups', array("product"), array(
+                'hierarchical' => true,
+                'show_admin_column' => true,
+                'label' => __('Target Groups', 'wp-product'),
+                'singular_label' => __('Target Groups', 'wp-product'),
+                'rewrite' => array( 'slug' => 'target_groups'  )));
+        register_taxonomy_for_object_type('target_groups', 'product');
 }
 
 function wp_product_plugin_add_box()
