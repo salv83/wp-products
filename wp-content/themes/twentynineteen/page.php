@@ -16,7 +16,7 @@ get_header();
 		<main id="main" class="site-main">
 
 			<?php
-
+			echo('this is a test');
 			/* Start the Loop */
 			while ( have_posts() ) :
 				the_post();
